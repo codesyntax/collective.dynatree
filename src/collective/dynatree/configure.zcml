@@ -45,6 +45,11 @@
                  interface=".interfaces.IDynatreeWidget" />
     </class>
 
+    <class class=".widget.DynatreeMultiWidget">
+        <require permission="zope.Public"
+                 interface=".interfaces.IDynatreeWidget" />
+    </class>
+
     <z3c:widgetTemplate
         mode="input"
         widget=".interfaces.IDynatreeWidget"        

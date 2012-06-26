@@ -1,3 +1,4 @@
+from zope.app.component.hooks import getSite
 import zope.component
 import zope.interface
 from zope.schema.interfaces import IVocabularyFactory
@@ -5,7 +6,7 @@ from zope.schema.interfaces import IVocabularyFactory
 from Acquisition import aq_inner
 
 import z3c.form
-from z3c.form.widget import SequenceWidget
+from z3c.form.widget import SequenceWidget, MultiWidget
 from z3c.json.converter import JSONWriter
 
 from plone.autoform.interfaces import IFormFieldProvider
@@ -37,10 +38,15 @@ class FieldVocabDynatreeJsonView(BrowserView):
                     field = behavior_schema.get(fieldname)
                     if field is not None:
                         break
+        try:
+            vname = field.vocabularyName
+            factory = zope.component.getUtility(IVocabularyFactory, vname)
+            tree = factory(context)
+        except AttributeError:
+            site = getSite()
+            voc = site.get('portal_vocabularies').get('moduluak', None)
+            tree = voc.getVocabularyDict(voc)
 
-        vname = field.vocabularyName
-        factory = zope.component.getUtility(IVocabularyFactory, vname)
-        tree = factory(context)
         # XXX: "selected" is not set in input.pt, so does it make sense to check
         # for it here? Only if this json view is called elsewhere, which
         # doesn't seem to be the case...
@@ -54,7 +60,7 @@ class DynatreeWidget(z3c.form.browser.widget.HTMLInputWidget, SequenceWidget):
     """
     zope.interface.implementsOnly(interfaces.IDynatreeWidget)
     klass = u'dynatree-widget'
-    selectMode = 1
+    selectMode = 2
     minExpandLevel = 0
     rootVisible = False
     autoCollapse = False
@@ -83,6 +89,13 @@ class DynatreeWidget(z3c.form.browser.widget.HTMLInputWidget, SequenceWidget):
         result.append('title,%s' % self.label)
         return '/'.join(result)
 
+    def extract(self, *args, **kwargs):
+        return self.request.get(self.name, u'').split('|')
+
+
+class DynatreeMultiWidget(DynatreeWidget):
+    selectMode = 2
+
 
 @zope.component.adapter(zope.schema.TextLine, z3c.form.interfaces.IFormLayer)
 @zope.interface.implementer(z3c.form.interfaces.IFieldWidget)
@@ -92,4 +105,9 @@ def DynatreeFieldWidget(field, request):
     return z3c.form.widget.FieldWidget(field, DynatreeWidget(request))
 
 
-
+@zope.component.adapter(zope.schema.List, z3c.form.interfaces.IFormLayer)
+@zope.interface.implementer(z3c.form.interfaces.IFieldWidget)
+def DynatreeMultiFieldWidget(field, request):
+    """ IFieldWidget factory for DynatreeWidget
+    """    
+    return z3c.form.widget.FieldWidget(field, DynatreeMultiWidget(request))
