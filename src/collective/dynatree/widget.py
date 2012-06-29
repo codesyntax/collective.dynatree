@@ -8,7 +8,7 @@ from Acquisition import aq_inner
 import z3c.form
 from z3c.form.widget import SequenceWidget, MultiWidget
 from z3c.json.converter import JSONWriter
-
+import json
 from plone.autoform.interfaces import IFormFieldProvider
 from plone.behavior.interfaces import IBehaviorAssignable
 from plone.dexterity.interfaces import IDexterityFTI
@@ -17,6 +17,7 @@ from Products.Five.browser import BrowserView
 
 from utils import dict2dynatree
 import interfaces
+from types import StringType, UnicodeType, ListType, TupleType
 
 class FieldVocabDynatreeJsonView(BrowserView):
 
@@ -69,7 +70,7 @@ class DynatreeWidget(z3c.form.browser.widget.HTMLInputWidget, SequenceWidget):
     atvocabulary = None
 
     @property
-    def widget_value(self):
+    def widget_value(self):        
         return self.request.get(self.__name__, '|'.join(v for v in self.value))
 
     @property
@@ -89,8 +90,12 @@ class DynatreeWidget(z3c.form.browser.widget.HTMLInputWidget, SequenceWidget):
         result.append('title,%s' % self.label)
         return '/'.join(result)
 
-    def extract(self, *args, **kwargs):
-        return self.request.get(self.name, u'').split('|')
+    def extract(self, *args, **kwargs):        
+        if self.request.form.get(self.name, None):
+            return self.request.form.get(self.name).split('|')
+        else:
+            data = self.field.get(self.context)
+            return data
 
 
 class DynatreeMultiWidget(DynatreeWidget):
