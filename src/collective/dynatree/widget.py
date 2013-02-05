@@ -90,12 +90,16 @@ class DynatreeWidget(z3c.form.browser.widget.HTMLInputWidget, SequenceWidget):
         result.append('title,%s' % self.label)
         return '/'.join(result)
 
-    def extract(self, *args, **kwargs):        
+    def extract(self):
         if self.request.form.get(self.name, None):
             return self.request.form.get(self.name).split('|')
         else:
-            data = self.field.get(self.context)
-            return data
+            try:
+                data = self.field.get(self.context)
+                return data
+            except:
+                return []
+
 
 
 class DynatreeMultiWidget(DynatreeWidget):
