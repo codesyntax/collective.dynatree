@@ -1,4 +1,4 @@
-from zope.app.component.hooks import getSite
+from zope.site.hooks import getSite
 import zope.component
 import zope.interface
 from zope.schema.interfaces import IVocabularyFactory
@@ -25,7 +25,7 @@ class FieldVocabDynatreeJsonView(BrowserView):
         context = aq_inner(self.context)
         fieldname = self.request.get('fieldname')
         portal_type = self.request.get('portal_type')
-        
+
         fti = zope.component.getUtility(IDexterityFTI, name=portal_type)
         schema = fti.lookupSchema()
 
@@ -56,7 +56,7 @@ class FieldVocabDynatreeJsonView(BrowserView):
 
 
 class DynatreeWidget(z3c.form.browser.widget.HTMLInputWidget, SequenceWidget):
-    """ A text field widget with a dynatree javascript vocabulary to determine 
+    """ A text field widget with a dynatree javascript vocabulary to determine
         the value.
     """
     zope.interface.implementsOnly(interfaces.IDynatreeWidget)
@@ -70,7 +70,7 @@ class DynatreeWidget(z3c.form.browser.widget.HTMLInputWidget, SequenceWidget):
     atvocabulary = None
 
     @property
-    def widget_value(self):        
+    def widget_value(self):
         return self.request.get(self.__name__, '|'.join(v for v in self.value))
 
     @property
@@ -118,5 +118,5 @@ def DynatreeFieldWidget(field, request):
 @zope.interface.implementer(z3c.form.interfaces.IFieldWidget)
 def DynatreeMultiFieldWidget(field, request):
     """ IFieldWidget factory for DynatreeWidget
-    """    
+    """
     return z3c.form.widget.FieldWidget(field, DynatreeMultiWidget(request))
